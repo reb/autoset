@@ -97,6 +97,7 @@ def generate(id, cardIndex, csv_file):
     csv_file.write(f'gs://autoset-vcm/generated/{id}.png,{tag}\n')
 
 
+random.seed(42)
 with open('training-set/_tags.csv', 'w') as csv_file:
     for cardIndex in range(len(cards)):
         for i in range(101):
