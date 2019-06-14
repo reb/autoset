@@ -61,6 +61,11 @@ def convert_point(point, location, imageSize):
     return ((x + locationX) / width, (y + locationY) / height)
 
 
+def point_to_str(point):
+    x, y = point
+    return f'{round(x, 2)},{round(y, 2)}'
+
+
 def render_background(img):
     center = (random.randrange(0, SIZE), random.randrange(0, SIZE))
     innerColor = [random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256)]
@@ -90,15 +95,20 @@ def generate(id, cardIndex, csv_file):
 
     cardToPlace, boundingBox = transform_image(card)
 
-    output.paste(cardToPlace, (random.randint(0, SIZE - cardToPlace.size[0]), random.randint(0, SIZE - cardToPlace.size[1])), cardToPlace)
+    location = (random.randint(0, SIZE - cardToPlace.size[0]), random.randint(0, SIZE - cardToPlace.size[1]))
+    output.paste(cardToPlace, location, cardToPlace)
 
-    output.filter(ImageFilter.GaussianBlur(random.randint(1, 4))).save(f'training-set/{id}.png')
+    filename = f'{id}.jpg'
+    output.filter(ImageFilter.GaussianBlur(random.randint(1, 4))).save(f'training-set/{filename}')
 
-    csv_file.write(f'gs://autoset-vcm/generated/{id}.png,{tag}\n')
+    relativeCoords = convert_to_relative(boundingBox, location, output.size)
+    relativeCoordsString = ','.join([point_to_str(point) for point in relativeCoords])
+
+    csv_file.write(f'UNASSIGNED,gs://autoset-vcm/generated-objects/{filename},{tag},{relativeCoordsString}\n')
 
 
 random.seed(42)
-with open('training-set/_tags.csv', 'w') as csv_file:
+with open('training-set/tags.csv', 'w') as csv_file:
     for cardIndex in range(len(cards)):
         for i in range(101):
             generate(f'{cardIndex}-{i}', cardIndex, csv_file)
