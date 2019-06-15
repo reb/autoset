@@ -2,21 +2,29 @@ import xml.etree.ElementTree as ET
 import sys
 
 
-tree  = ET.parse(sys.argv[1])
-root = tree.getroot()
-filename = root.findall("./filename")[0].text
-tags = root.findall("./object")
+def get_float(node, path):
+    return float(get_text(node, path))
 
-width = float(root.findall("./size/width")[0].text)
-height = float(root.findall("./size/height")[0].text)
+
+def get_text(node, path):
+    return node.findall(path)[0].text
+
+
+tree = ET.parse(sys.argv[1])
+root = tree.getroot()
+filename = get_text(root, "./filename")
+
+width = get_float(root, "./size/width")
+height = get_float(root, "./size/height")
 
 with open('bbs.csv', 'w') as csv_file:
+    tags = root.findall("./object")
     for tag in tags:
-        xmin = float(tag.findall("./bndbox/xmin")[0].text)
-        ymin = float(tag.findall("./bndbox/ymin")[0].text)
-        xmax = float(tag.findall("./bndbox/xmax")[0].text)
-        ymax = float(tag.findall("./bndbox/ymax")[0].text)
-        name = tag.findall("./name")[0].text
+        xmin = get_float(tag, "./bndbox/xmin")
+        ymin = get_float(tag, "./bndbox/ymin")
+        xmax = get_float(tag, "./bndbox/xmax")
+        ymax = get_float(tag, "./bndbox/ymax")
+        name = get_text(tag, "./name")
 
         top_left = f'{(xmin/ width)},{(ymax / height)}'
         bottom_right = f'{(xmax / width)},{(ymin / height)}'
