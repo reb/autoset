@@ -129,9 +129,17 @@ def bounding_box(card, camera):
     return [(xs[1], 1 - ys[2]), (xs[2], 1 - ys[1])]
 
 
+def cap(number):
+    if (number < 0):
+        return 0
+    if (number > 1):
+        return 1
+    return number
+
+
 def point_to_str(point):
     x, y = point
-    return f'{round(x, 2)},{round(y, 2)}'
+    return f'{round(cap(x), 2)},{round(cap(y), 2)}'
 
 
 def move_to_random_position(object, spread, z):
