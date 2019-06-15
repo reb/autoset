@@ -10,7 +10,8 @@ import argparse
 
 
 DIAGONAL = math.sqrt(1 + 0.647 ** 2)
-SPREAD = 3
+CARD_SPREAD = 3
+BLOCKER_SPREAD = 8
 
 
 def intersect_simple(a, b):
@@ -133,29 +134,41 @@ def point_to_str(point):
     return f'{round(x, 2)},{round(y, 2)}'
 
 
+def move_to_random_position(object, spread, z):
+    object.location = [random.random() * spread - (spread / 2), random.random() * spread - (spread / 2), z]
+
+
+def move_blockers(blockers):
+    for blocker in blockers:
+        move_to_random_position(blocker, BLOCKER_SPREAD, 6)
+
+
 def generate(number_of_images, card_mask):
     random.seed(1337)
 
     cardsGroup = [card for card in bpy.data.objects if re.match('[0-9][RGB][FHE][WPD]', card.name)]
     for card in cardsGroup:
         card.hide_render = True
-
     print(f'total cards: {len(cardsGroup)}')
 
     subset = [card for card in cardsGroup if re.match(card_mask, card.name)]
-
     print(f'using cards: {len(subset)}')
+
+    blockers = [blocker for blocker in bpy.data.objects if re.match('Blocker.*', blocker.name)]
+    print(f'total blockers: {len(blockers)}')
 
     with open('tags.csv', 'w') as tags_csv, open('bbs.csv', 'w') as bbs_csv:
         for i in range(number_of_images):
-            print(i)
+            print(f'generating image {i}')
             bpy.data.worlds['World'].light_settings.environment_energy = random.random() / 2
             bpy.data.objects.get('Plane').active_material.diffuse_color = (random.random(), random.random(), random.random())
             
+            move_blockers(blockers)
+
             for card in subset:
                 card.hide_render = False
                 card.rotation_euler = [0, 0, 0]
-                card.location = [random.random() * SPREAD - (SPREAD / 2), random.random() * SPREAD - (SPREAD / 2), 0.01]
+                move_to_random_position(card, CARD_SPREAD, 0.01)
                 card.active_material.specular_intensity = random.random()
              
             bpy.context.scene.update()
@@ -191,6 +204,8 @@ def generate(number_of_images, card_mask):
                 top_left, bottom_right = bounding_box(card, camera)
                 bb = f'{point_to_str(top_left)},,,{point_to_str(bottom_right)},,'
                 bbs_csv.write(f'UNASSIGNED,gs://autoset-vcm/generated-blender/images/{filename},{card.name},{bb}\n')
+
+            bpy.ops.wm.save_as_mainfile(filepath=f'./debug-{filename}.blend')
 
 
 parser = argparse.ArgumentParser(description = 'Generate awesome test data!')

@@ -105,3 +105,5 @@ venv.bak/
 
 # Generated data
 training-set/
+debug-*.blend
+*.csv
