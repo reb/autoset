@@ -7,6 +7,7 @@ from PIL import Image, ImageFilter
 import numpy as np
 from itertools import combinations
 import argparse
+import os
 
 
 DIAGONAL = math.sqrt(1 + 0.647 ** 2)
@@ -167,10 +168,10 @@ def generate(number_of_images, card_mask):
                         if not b.hide_render:
                             a.hide_render = True
             
-            filename = f'{i:04d}.jpg'  
-            bpy.context.scene.render.filepath = f'training-set/{filename}'
+            filename = f'{i:04d}.jpg'
+            bpy.context.scene.render.filepath = f'{os.getcwd()}/training-set/{filename}'
             bpy.ops.render.render(write_still=True)
-            
+
             Image.open(bpy.context.scene.render.filepath).filter(ImageFilter.GaussianBlur(random.randint(1, 2))).save(bpy.context.scene.render.filepath)
             
             visible_cards = [card for card in subset if not card.hide_render]
