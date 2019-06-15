@@ -105,3 +105,4 @@ venv.bak/
 
 # Generated data
 training-set/
+.idea/
