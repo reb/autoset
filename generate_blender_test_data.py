@@ -151,7 +151,7 @@ def move_blockers(blockers):
         move_to_random_position(blocker, BLOCKER_SPREAD, 6)
 
 
-def generate(number_of_images, card_mask):
+def generate(number_of_images, card_mask, render_images):
     random.seed(1337)
 
     cardsGroup = [card for card in bpy.data.objects if re.match('[0-9][RGB][FHE][WPD]', card.name)]
@@ -189,10 +189,12 @@ def generate(number_of_images, card_mask):
                             a.hide_render = True
             
             filename = f'{i:04d}.jpg'  
-            bpy.context.scene.render.filepath = f'training-set/{filename}'
-            bpy.ops.render.render(write_still=True)
-            
-            Image.open(bpy.context.scene.render.filepath).filter(ImageFilter.GaussianBlur(random.randint(1, 2))).save(bpy.context.scene.render.filepath)
+            blur = random.randint(1, 2)
+
+            if render_images:
+                bpy.context.scene.render.filepath = f'training-set/{filename}'
+                bpy.ops.render.render(write_still=True)           
+                Image.open(bpy.context.scene.render.filepath).filter(ImageFilter.GaussianBlur(blur)).save(bpy.context.scene.render.filepath)
             
             visible_cards = [card for card in subset if not card.hide_render]
 
@@ -200,14 +202,6 @@ def generate(number_of_images, card_mask):
             tags_csv.write(f'gs://autoset-vcm/generated-blender/images/{filename},{tags}\n')
 
             camera = bpy.data.objects.get('Camera')
-            render = bpy.context.scene.render
-            modelview_matrix = camera.matrix_world.inverted()
-            projection_matrix = camera.calc_matrix_camera(
-                render.resolution_x,
-                render.resolution_y,
-                render.pixel_aspect_x,
-                render.pixel_aspect_y,
-            )
             for card in visible_cards:
                 top_left, bottom_right = bounding_box(card, camera)
                 bb = f'{point_to_str(top_left)},,,{point_to_str(bottom_right)},,'
@@ -216,11 +210,12 @@ def generate(number_of_images, card_mask):
             bpy.ops.wm.save_as_mainfile(filepath=f'./debug-{filename}.blend')
 
 
-parser = argparse.ArgumentParser(description = 'Generate awesome test data!')
+parser = argparse.ArgumentParser(description = 'Generate awesome test data!', prog='./generator.sh')
 parser.add_argument('images', type=int, help='Number of images to generate')
 parser.add_argument('-m', '--mask', default='....', help='Mask for the cards to use (e.g. ".RFD" for any number of Red Filled Diamonds)')
+parser.add_argument('-n', '--no-render', action='store_true', help='Mask for the cards to use (e.g. ".RFD" for any number of Red Filled Diamonds)')
 
 allArgs = sys.argv
 myArgs = parser.parse_args(allArgs[allArgs.index("--") + 1:])
 
-generate(myArgs.images, myArgs.mask)
+generate(myArgs.images, myArgs.mask, not myArgs.no_render)
