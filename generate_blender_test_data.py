@@ -13,6 +13,7 @@ import os
 DIAGONAL = math.sqrt(1 + 0.647 ** 2)
 CARD_SPREAD = 3
 BLOCKER_SPREAD = 8
+ROTATION_SPREAD = 0.1
 
 
 def intersect_simple(a, b):
@@ -143,13 +144,24 @@ def point_to_str(point):
     return f'{round(cap(x), 2)},{round(cap(y), 2)}'
 
 
+def random_value_in_spread(spread):
+    return random.random() * spread - (spread / 2)
+
+
 def move_to_random_position(object, spread, z):
-    object.location = [random.random() * spread - (spread / 2), random.random() * spread - (spread / 2), z]
+    object.location = [random_value_in_spread(spread), random_value_in_spread(spread), z]
 
 
 def move_blockers(blockers):
     for blocker in blockers:
         move_to_random_position(blocker, BLOCKER_SPREAD, 6)
+
+
+def place_card(card):
+    card.hide_render = False
+    card.rotation_euler = [0, 0, random_value_in_spread(ROTATION_SPREAD)]
+    move_to_random_position(card, CARD_SPREAD, 0.01)
+    card.active_material.specular_intensity = random.random()
 
 
 def generate(number_of_images, card_mask, render_images):
@@ -175,10 +187,7 @@ def generate(number_of_images, card_mask, render_images):
             move_blockers(blockers)
 
             for card in subset:
-                card.hide_render = False
-                card.rotation_euler = [0, 0, 0]
-                move_to_random_position(card, CARD_SPREAD, 0.01)
-                card.active_material.specular_intensity = random.random()
+                place_card(card)
              
             bpy.context.scene.update()
                 
