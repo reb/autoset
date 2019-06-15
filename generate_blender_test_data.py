@@ -16,6 +16,10 @@ BLOCKER_SPREAD = 8
 ROTATION_SPREAD = 0.1
 
 
+def random_color():
+    return (random.random(), random.random(), random.random())
+
+
 def intersect_simple(a, b):
     '''
     Super simple intersection detection that just checks that the smallest enclosing circles
@@ -164,28 +168,40 @@ def place_card(card):
     card.active_material.specular_intensity = random.random()
 
 
-def generate(number_of_images, card_mask, render_images):
+def change_lighting(lights):
+    for light in lights:
+        light.energy = 0.5 + (random.random() / 2)
+        light.color = random_color()
+
+
+def find_all_by_name(source, pattern):
+    return [obj for obj in source if re.match(pattern, obj.name)]
+
+
+def generate(number_of_images, card_mask, render_images, save_debug):
     random.seed(1337)
 
-    cardsGroup = [card for card in bpy.data.objects if re.match('[0-9][RGB][FHE][WPD]', card.name)]
+    cardsGroup = find_all_by_name(bpy.data.objects, '[0-9][RGB][FHE][WPD]')
     for card in cardsGroup:
         card.hide_render = True
     print(f'total cards: {len(cardsGroup)}')
 
-    subset = [card for card in cardsGroup if re.match(card_mask, card.name)]
+    subset = find_all_by_name(cardsGroup, card_mask)
     print(f'using cards: {len(subset)}')
 
-    blockers = [blocker for blocker in bpy.data.objects if re.match('Blocker.*', blocker.name)]
+    blockers = find_all_by_name(bpy.data.objects, 'Blocker.*')
     print(f'total blockers: {len(blockers)}')
+
+    lights = find_all_by_name(bpy.data.lamps, 'Lamp.*')
+    print(f'total lights: {len(lights)}')
 
     with open('tags.csv', 'w') as tags_csv, open('bbs.csv', 'w') as bbs_csv:
         for i in range(number_of_images):
             print(f'generating image {i}')
-            bpy.data.worlds['World'].light_settings.environment_energy = random.random() / 2
-            bpy.data.objects.get('Plane').active_material.diffuse_color = (random.random(), random.random(), random.random())
+            bpy.data.objects.get('Plane').active_material.diffuse_color = random_color()
             
             move_blockers(blockers)
-
+            change_lighting(lights)
             for card in subset:
                 place_card(card)
              
@@ -217,15 +233,17 @@ def generate(number_of_images, card_mask, render_images):
                 bb = f'{point_to_str(top_left)},,,{point_to_str(bottom_right)},,'
                 bbs_csv.write(f'UNASSIGNED,gs://autoset-vcm/generated-blender/images/{filename},{card.name},{bb}\n')
 
-            bpy.ops.wm.save_as_mainfile(filepath=f'./debug-{filename}.blend')
+            if save_debug:
+                bpy.ops.wm.save_as_mainfile(filepath=f'./debug-{filename}.blend')
 
 
 parser = argparse.ArgumentParser(description = 'Generate awesome test data!', prog='./generator.sh')
 parser.add_argument('images', type=int, help='Number of images to generate')
 parser.add_argument('-m', '--mask', default='....', help='Mask for the cards to use (e.g. ".RFD" for any number of Red Filled Diamonds)')
-parser.add_argument('-n', '--no-render', action='store_true', help='Mask for the cards to use (e.g. ".RFD" for any number of Red Filled Diamonds)')
+parser.add_argument('-n', '--no-render', action='store_true', help='Skip actual rendering of images (but do create the metadata CSVs)')
+parser.add_argument('-d', '--debug', action='store_true', help='Save a copy of the Blender file for every image')
 
 allArgs = sys.argv
 myArgs = parser.parse_args(allArgs[allArgs.index("--") + 1:])
 
-generate(myArgs.images, myArgs.mask, not myArgs.no_render)
+generate(myArgs.images, myArgs.mask, not myArgs.no_render, myArgs.debug)
