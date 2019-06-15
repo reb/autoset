@@ -1,6 +1,7 @@
 #!/bin/bash
 
-rm -rf ./training-set/
 rm ./debug-*.blend
-mkdir ./training-set
+mkdir -p ./training-set
+rm training-set/*.jpg
+xdg-open preview.html
 blender ./table.blend --background --python ./generate_blender_test_data.py -- $@

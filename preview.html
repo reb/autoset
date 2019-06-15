@@ -1,0 +1,75 @@
+<html>
+<head>
+    <script type="text/javascript">
+        let lastLoad = new Date();
+        // const interval = setInterval(refresh, 1000)
+
+        function leftPad(number) {
+            return ("000" + number).substr(-4);
+        }
+
+        function loadImage(i) {
+            const preview = document.getElementById('preview');
+            const previewLabel = document.getElementById('preview-label');
+            const img = new Image;
+            img.onload = function() {
+                lastLoad = new Date();
+                if (i > 0 && i <= 20) {
+                    const newImgContainer = document.createElement('div');
+                    newImgContainer.className = 'image';
+                    const label = document.createElement('span');
+                    label.innerHTML = leftPad(i - 1);
+                    const newImg = document.createElement('img');
+                    newImg.width = 256;
+                    newImg.src = preview.src;
+                    newImgContainer.appendChild(newImg);
+                    newImgContainer.appendChild(label);
+                    if (document.body.children.length > 1) {
+                        document.body.insertBefore(newImgContainer, document.body.children[1]);
+                    } else {
+                        document.body.appendChild(newImgContainer);
+                    }
+                }
+                preview.src = this.src + '-1';
+                previewLabel.innerHTML = leftPad(i);
+                loadImage(i + 1);
+            }
+            img.onerror = function() {
+                if (new Date().getTime() - lastLoad.getTime() < 5000) {
+                    setTimeout(() => loadImage(i), 500);
+                }
+            }
+            img.src = `training-set/${leftPad(i)}.jpg?v=${Math.random()}`;
+        }
+    </script>
+    <style>
+        .image {
+            display: inline-block;
+            position: relative;
+        }
+
+        .image span {
+            position: absolute;
+            bottom: 1px;
+            right: 3px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .image img {
+            width: 256px;
+        }
+
+        .image.preview img {
+            width: 512px;
+        }
+    </style>
+</head>
+<body onload="loadImage(0)">
+    <div class="image preview">
+        <img id="preview"/>
+        <span id="preview-label"></span>
+    </div>
+
+</body>
+</html>
