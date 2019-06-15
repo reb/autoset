@@ -1,10 +1,9 @@
-import bpy, bmesh
+import bpy, bpy_extras
 import sys
 import random
 import re
 import math
 from PIL import Image, ImageFilter
-from mathutils.bvhtree import BVHTree
 import numpy as np
 from itertools import combinations
 import argparse
@@ -14,11 +13,11 @@ DIAGONAL = math.sqrt(1 + 0.647 ** 2)
 SPREAD = 3
 
 
-def intersect_mesh(a, b):
-    return bvhs[a.name].overlap(bvhs[b.name])
-
-
 def intersect_simple(a, b):
+    '''
+    Super simple intersection detection that just checks that the smallest enclosing circles
+    of the two cards do not intersect.
+    '''
     distance = math.sqrt((a.location[0] - b.location[0]) ** 2 + (a.location[1] - b.location[1]) ** 2)
     return distance < DIAGONAL
 
@@ -122,12 +121,24 @@ def is_separating_axis(o, p1, p2):
         return True, None
 
 
-bvhs = {}
+def bounding_box(card, camera):
+    screen_vertices = [bpy_extras.object_utils.world_to_camera_view(bpy.context.scene, camera, card.matrix_world * vertex.co) for vertex in card.data.vertices]
+    xs = sorted([screen_vertex[0] for screen_vertex in screen_vertices])
+    ys = sorted([screen_vertex[1] for screen_vertex in screen_vertices])
+    return [(xs[1], 1 - ys[2]), (xs[2], 1 - ys[1])]
+
+
+def point_to_str(point):
+    x, y = point
+    return f'{round(x, 2)},{round(y, 2)}'
+
 
 def generate(number_of_images, card_mask):
     random.seed(1337)
 
     cardsGroup = [card for card in bpy.data.objects if re.match('[0-9][RGB][FHE][WPD]', card.name)]
+    for card in cardsGroup:
+        card.hide_render = True
 
     print(f'total cards: {len(cardsGroup)}')
 
@@ -135,19 +146,18 @@ def generate(number_of_images, card_mask):
 
     print(f'using cards: {len(subset)}')
 
-    with open('tags.csv', 'w') as tags_csv:
+    with open('tags.csv', 'w') as tags_csv, open('bbs.csv', 'w') as bbs_csv:
         for i in range(number_of_images):
             print(i)
-
             bpy.data.worlds['World'].light_settings.environment_energy = random.random() / 2
             bpy.data.objects.get('Plane').active_material.diffuse_color = (random.random(), random.random(), random.random())
             
             for card in subset:
                 card.hide_render = False
-                card.rotation_euler = [0, 0, random.random()]
+                card.rotation_euler = [0, 0, 0]
                 card.location = [random.random() * SPREAD - (SPREAD / 2), random.random() * SPREAD - (SPREAD / 2), 0.01]
                 card.active_material.specular_intensity = random.random()
-    
+             
             bpy.context.scene.update()
                 
             random.shuffle(subset)
@@ -163,8 +173,24 @@ def generate(number_of_images, card_mask):
             
             Image.open(bpy.context.scene.render.filepath).filter(ImageFilter.GaussianBlur(random.randint(1, 2))).save(bpy.context.scene.render.filepath)
             
-            tags = ','.join([card.name for card in subset if not card.hide_render])
+            visible_cards = [card for card in subset if not card.hide_render]
+
+            tags = ','.join([card.name for card in visible_cards])
             tags_csv.write(f'gs://autoset-vcm/generated-blender/images/{filename},{tags}\n')
+
+            camera = bpy.data.objects.get('Camera')
+            render = bpy.context.scene.render
+            modelview_matrix = camera.matrix_world.inverted()
+            projection_matrix = camera.calc_matrix_camera(
+                render.resolution_x,
+                render.resolution_y,
+                render.pixel_aspect_x,
+                render.pixel_aspect_y,
+            )
+            for card in visible_cards:
+                top_left, bottom_right = bounding_box(card, camera)
+                bb = f'{point_to_str(top_left)},,,{point_to_str(bottom_right)},,'
+                bbs_csv.write(f'UNASSIGNED,gs://autoset-vcm/generated-blender/images/{filename},{card.name},{bb}\n')
 
 
 parser = argparse.ArgumentParser(description = 'Generate awesome test data!')
