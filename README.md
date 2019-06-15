@@ -10,3 +10,8 @@ Tag: `<count><colour><filling><shape>`
 Examples:
 
 * `1RFD`: One red filled diamond
+
+## Blender
+
+Run `./generator.sh [--mask <card mask>] <number of images>` to generate a set of images.
+The card mask is a regex to match a subset of the cards, e.g. `.[RG]F.` to use any number of Red or Green Filled shapes.
