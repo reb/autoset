@@ -34,16 +34,14 @@ def handle(request):
     image = request_json.get('image')
     prediction = get_prediction(image)
     found_set = find_set(prediction)
-    if found_set is not None:
-        return json.dumps([format_annotation(card) for card in found_set])
-    return "No set found"
+    return json.dumps([format_annotation(card) for card in found_set])
 
 
 def find_set(prediction):
     for potential_set in combinations(prediction.payload, 3):
         if is_set(*[c.display_name for c in potential_set]):
             return potential_set
-    return None
+    return []
 
 
 def is_set(a, b, c):
