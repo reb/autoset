@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 from itertools import combinations
 from google.cloud import automl_v1beta1
 
@@ -32,8 +33,10 @@ def handle(request):
     request_json = request.get_json()
     image = request_json.get('image')
     prediction = get_prediction(image)
-    set = find_set(prediction)
-    return set
+    found_set = find_set(prediction)
+    if found_set is not None:
+        return json.dumps([format_annotation(card) for card in found_set])
+    return "No set found"
 
 
 def find_set(prediction):
@@ -55,3 +58,17 @@ def is_set(a, b, c):
         return False
     return True
 
+
+def format_annotation(annotation):
+    bounding_box = annotation.image_object_detection.bounding_box.normalized_vertices
+    return {
+        "name": annotation.display_name,
+        "bounding_box": [format_point(p) for p in bounding_box]
+    }
+
+
+def format_point(point):
+    return {
+        "x": point.x,
+        "y": point.y
+    }
