@@ -2,7 +2,6 @@ import os
 import base64
 from itertools import combinations
 from google.cloud import automl_v1beta1
-from google.protobuf.json_format import MessageToJson
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 MODEL_ID = os.environ.get('MODEL_ID')
@@ -34,7 +33,7 @@ def handle(request):
     image = request_json.get('image')
     prediction = get_prediction(image)
     set = find_set(prediction)
-    return MessageToJson(set)
+    return set
 
 
 def find_set(prediction):
