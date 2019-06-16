@@ -1,5 +1,6 @@
 import os
 import base64
+from itertools import combinations
 from google.cloud import automl_v1beta1
 from google.protobuf.json_format import MessageToJson
 
@@ -31,7 +32,16 @@ def handle(request):
 
     request_json = request.get_json()
     image = request_json.get('image')
-    return MessageToJson(get_prediction(image))
+    prediction = get_prediction(image)
+    set = find_set(prediction)
+    return MessageToJson(set)
+
+
+def find_set(prediction):
+    for potential_set in combinations(prediction.payload, 3):
+        if is_set(*[c.displayName for c in potential_set]):
+            return potential_set
+    return None
 
 
 def is_set(a, b, c):
