@@ -39,7 +39,7 @@ def handle(request):
 
 def find_set(prediction):
     for potential_set in combinations(prediction.payload, 3):
-        if is_set(*[c.displayName for c in potential_set]):
+        if is_set(*[c.display_name for c in potential_set]):
             return potential_set
     return None
 
