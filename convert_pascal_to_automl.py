@@ -36,7 +36,8 @@ def convert_file(file_name, csv_file):
         top_left = f'{(xmin/ width)},{(ymax / height)}'
         bottom_right = f'{(xmax / width)},{(ymin / height)}'
 
-        csv_file.write(f'UNASSIGNED,gs://autoset-vcm/annotated-photos/images/{filename},{name},{top_left},,,{bottom_right},,\n')
+        csv_file.write(f'UNASSIGNED,gs://annotated-photos/images/{filename},{name},{top_left},,,{bottom_right},,\n')
+
 
 if __name__ == "__main__":
     with open('bbs.csv', 'w') as csv_file:
