@@ -32,3 +32,17 @@ def handle(request):
     request_json = request.get_json()
     image = request_json.get('image')
     return MessageToJson(get_prediction(image))
+
+
+def is_set(a, b, c):
+    for f_a, f_b, f_c in zip(a, b, c):
+        # feature is all the same
+        if f_a == f_b == f_c:
+            continue
+        # feature is all different
+        if f_a != f_b != f_c != f_a:
+            continue
+        # this is not a set
+        return False
+    return True
+
