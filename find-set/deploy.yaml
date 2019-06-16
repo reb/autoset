@@ -1,0 +1,4 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['functions', 'deploy', 'find-set', '--trigger-http', '--runtime', 'python37', '--entry-point', 'handle', '--region', 'europe-west1', '--env-vars-file', '../.env.yaml']
+  dir: 'find-set/function'
