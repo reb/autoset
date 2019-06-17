@@ -1,5 +1,8 @@
 <html>
 <head>
+  <link href="https://fonts.googleapis.com/css?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+  </style>
   <script>
     function hasGetUserMedia() {
       return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
@@ -24,6 +27,7 @@
       const videoSelect = document.querySelector('select#videoSource');
       videoSelect.onchange = getStream;
 
+      backToStreaming();
     }
 
     function gotDevices(deviceInfos) {
@@ -37,6 +41,9 @@
           option.value = deviceInfo.deviceId;
           option.text = deviceInfo.label || 'camera ' + (videoSelect.length + 1);
           videoSelect.appendChild(option);
+          if (option.text.includes('facing back')) {
+            videoSelect.value = option.value;
+          }
         });
       }
     }
@@ -69,10 +76,19 @@
       console.error('Error: ', error);
     }
 
+    function backToStreaming() {
+      const canvas = document.querySelector('canvas');
+      const video = document.querySelector('video');
+      video.style.display = 'block';
+      canvas.style.display = 'none';
+    }
+
     function capture() {
       const canvas = document.querySelector('canvas');
       const video = document.querySelector('video');
-      const preview = document.querySelector('img');
+
+      video.style.display = 'none';
+      canvas.style.display = 'block';
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -80,31 +96,47 @@
       
       const imageData = canvas.toDataURL('image/jpeg');
       
-      preview.src = imageData;
-
       const xhr = new XMLHttpRequest();
       xhr.open('POST', 'https://europe-west1-strong-jetty-243820.cloudfunctions.net/find-set', true);
       xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-      xhr.upload.onprogress = function(event) {
-        console.log('progress', event);
-      };
-      xhr.onload = function(event) {
-        console.log('loaded', event);
+      xhr.onload = function() {
         const result = JSON.parse(xhr.responseText);
-        if (result.length > 0) {
-          alert('Set!');
-        } else {
-          alert('No set :(');
-        }
+        showResult(canvas, result);
       };
       xhr.send(JSON.stringify({image: imageData.replace(/^data:image\/[^;]+;base64,/, '')}));
+    }
+
+    function showResult(canvas, result) {
+      const ctx = canvas.getContext('2d');
+      if (result.length > 0) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'red';
+
+        result.forEach(card => {
+          ctx.beginPath();
+          const topLeft = card.bounding_box[0];
+          const bottomRight = card.bounding_box[1];
+          const x = topLeft.x * canvas.width;
+          const y = topLeft.y * canvas.height;
+          const width = (bottomRight.x - topLeft.x) * canvas.width;
+          const height = (bottomRight.y - topLeft.y) * canvas.height;
+          ctx.rect(x, y, width, height);
+          ctx.stroke();
+          ctx.font = '30px "Pacifico"';
+          ctx.fillStyle = 'red';
+          ctx.fillText(card.name, x, y - 5);
+        });
+      } else {
+        ctx.fillStyle = 'red';
+        ctx.font = '50px "Pacifico"';
+        ctx.fillText('No set :(', 10, canvas.height / 2);
+      }
     }
   </script>
 </head>
 <body onload="init()">
   <video autoplay onclick="capture()"></video>
-  <img src="">
-  <canvas style="display:none;"></canvas>
+  <canvas onclick="backToStreaming()"></canvas>
   <select id="videoSource"></select>
 </body>
 </html>
