@@ -40,7 +40,7 @@ def handle(request):
 
 
 def identify_colours(image, prediction):
-    for card in prediction:
+    for card in prediction.payload:
         colour = identify(image, card.image_object_detection.bounding_box.normalized_vertices)
         card.display_name = card.display_name[0] + colour + card.display_name[1:]
     return prediction
