@@ -4,6 +4,7 @@ import json
 from itertools import combinations
 from google.cloud import automl_v1beta1
 from colour_detector import identify
+import storage
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 MODEL_ID = os.environ.get('MODEL_ID')
@@ -48,6 +49,7 @@ def handle(request):
     request_json = request.get_json()
     image = request_json.get('image')
     image_bytes = base64.b64decode(image.encode())
+    storage.upload(image_bytes)
     prediction = get_prediction(image_bytes)
     log_prediction(prediction)
 
