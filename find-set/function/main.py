@@ -3,7 +3,7 @@ import base64
 import json
 from itertools import combinations
 from google.cloud import automl_v1beta1
-from function.colour_detector import identify
+from colour_detector import identify
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 MODEL_ID = os.environ.get('MODEL_ID')
