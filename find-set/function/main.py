@@ -34,6 +34,8 @@ def handle(request):
     image = request_json.get('image')
     image_bytes = base64.b64decode(image.encode())
     prediction = get_prediction(image_bytes)
+    log_prediction(prediction)
+
     coloured = identify_colours(image_bytes, prediction.payload)
     found_set = find_set(coloured)
     return json.dumps([format_annotation(card) for card in found_set])
@@ -75,3 +77,10 @@ def format_point(point):
         "x": point.x,
         "y": point.y
     }
+
+
+def log_prediction(prediction):
+    print("Found bounding boxes:")
+    for annotation in prediction.payload:
+        bbox = annotation.image_object_detection.bounding_box.normalized_vertices
+        print(f'{bbox[0].x},{bbox[0].y},{bbox[1].x},{bbox[1].y},{annotation.display_name}')
