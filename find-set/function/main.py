@@ -3,6 +3,7 @@ import base64
 import json
 from itertools import combinations
 from google.cloud import automl_v1beta1
+from function.colour_detector import identify
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 MODEL_ID = os.environ.get('MODEL_ID')
@@ -16,8 +17,8 @@ def get_prediction(content):
     name = f'projects/{PROJECT_ID}/locations/us-central1/models/{MODEL_ID}'
     payload = {'image': {'image_bytes': content}}
     params = {}
-    request = client.predict(name, payload, params)
-    return request  # waits till request is returned
+    response = client.predict(name, payload, params)
+    return response  # waits till request is returned
 
 
 def handle(request):
@@ -33,8 +34,16 @@ def handle(request):
     request_json = request.get_json()
     image = request_json.get('image')
     prediction = get_prediction(image)
-    found_set = find_set(prediction)
+    coloured = identify_colours(image, prediction)
+    found_set = find_set(coloured)
     return json.dumps([format_annotation(card) for card in found_set])
+
+
+def identify_colours(image, prediction):
+    for card in prediction:
+        colour = identify(image, card.image_object_detection.bounding_box.normalized_vertices)
+        card.display_name = card.display_name[0] + colour + card.display_name[1:]
+    return prediction
 
 
 def find_set(prediction):
@@ -46,14 +55,10 @@ def find_set(prediction):
 
 def is_set(a, b, c):
     for f_a, f_b, f_c in zip(a, b, c):
-        # feature is all the same
-        if f_a == f_b == f_c:
-            continue
-        # feature is all different
-        if f_a != f_b != f_c != f_a:
-            continue
-        # this is not a set
-        return False
+        all_same = f_a == f_b == f_c
+        all_different = f_a != f_b != f_c != f_a
+        if not (all_same or all_different):
+            return False
     return True
 
 
