@@ -10,12 +10,11 @@ MODEL_ID = os.environ.get('MODEL_ID')
 
 
 # 'content' is base-64-encoded image data.
-def get_prediction(content):
+def get_prediction(image_bytes):
     client = automl_v1beta1.PredictionServiceClient()
-    content = base64.b64decode(content.encode())
 
     name = f'projects/{PROJECT_ID}/locations/us-central1/models/{MODEL_ID}'
-    payload = {'image': {'image_bytes': content}}
+    payload = {'image': {'image_bytes': image_bytes}}
     params = {}
     response = client.predict(name, payload, params)
     return response  # waits till request is returned
@@ -33,21 +32,22 @@ def handle(request):
 
     request_json = request.get_json()
     image = request_json.get('image')
-    prediction = get_prediction(image)
-    coloured = identify_colours(image, prediction)
+    image_bytes = base64.b64decode(image.encode())
+    prediction = get_prediction(image_bytes)
+    coloured = identify_colours(image_bytes, prediction.payload)
     found_set = find_set(coloured)
     return json.dumps([format_annotation(card) for card in found_set])
 
 
-def identify_colours(image, prediction):
-    for card in prediction.payload:
-        colour = identify(image, card.image_object_detection.bounding_box.normalized_vertices)
+def identify_colours(image_bytes, cards):
+    for card in cards:
+        colour = identify(image_bytes, card.image_object_detection.bounding_box.normalized_vertices)
         card.display_name = card.display_name[0] + colour + card.display_name[1:]
-    return prediction
+    return cards
 
 
-def find_set(prediction):
-    for potential_set in combinations(prediction.payload, 3):
+def find_set(cards):
+    for potential_set in combinations(cards, 3):
         if is_set(*[c.display_name for c in potential_set]):
             return potential_set
     return []
