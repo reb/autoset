@@ -1,0 +1,16 @@
+To execute firebase in CodeBuild it is needed to install a custom build step.
+
+Find your PROJECT_ID by running:
+```
+gcloud projects list
+```
+
+Then you can choose to build the custom build step by first configuring the project:
+(replace VALUE with your PROJECT_ID)
+```
+gcloud config set project VALUE
+gcloud builds submit --config=config.yaml .
+```
+
+Or run it in one command:
+gcloud builds submit --project=VALUE --config=config.yaml .
