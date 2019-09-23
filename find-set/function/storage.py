@@ -10,7 +10,7 @@ BUCKET_NAME = os.environ.get('BUCKET_NAME')
 
 def upload(file_data):
     hash = ''.join(random.choice(string.ascii_lowercase) for _ in range(4))
-    timestamp = str(datetime.now())
+    timestamp = datetime.now().strftime("%Y-%m-%d %H%M%S.%f")
 
     bucket = STORAGE_CLIENT.get_bucket(BUCKET_NAME)
     blob = bucket.blob(f'{timestamp}-{hash}.jpg')
