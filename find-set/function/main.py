@@ -41,6 +41,8 @@ def handle(request):
         }
         return '', 204, headers
 
+    execution_id = request.headers.get("Function-Execution-Id")
+
     # Set CORS headers for the main request
     headers = {
         'Access-Control-Allow-Origin': '*'
@@ -49,7 +51,7 @@ def handle(request):
     request_json = request.get_json()
     image = request_json.get('image')
     image_bytes = base64.b64decode(image.encode())
-    storage.upload(image_bytes)
+    storage.upload(image_bytes, execution_id)
     prediction = get_prediction(image_bytes)
     log_prediction(prediction)
 
