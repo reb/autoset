@@ -1,24 +1,37 @@
-import os
 import base64
 import json
+import os
 from itertools import combinations
-from google.cloud import automl_v1beta1
-from colour_detector import identify
+
+import requests
 import storage
+from colour_detector import identify
 
-PROJECT_ID = os.environ.get('PROJECT_ID')
-MODEL_ID = os.environ.get('MODEL_ID')
+PREDICTION_URL = os.environ.get('PREDICTION_URL')
 
 
-# 'content' is base-64-encoded image data.
-def get_prediction(image_bytes):
-    client = automl_v1beta1.PredictionServiceClient()
+def get_predictions(image_bytes, image_key):
+    instances = {
+        'instances': [
+            {'image_bytes': {'b64': image_bytes},
+             'key': image_key}
+        ]
+    }
 
-    name = f'projects/{PROJECT_ID}/locations/us-central1/models/{MODEL_ID}'
-    payload = {'image': {'image_bytes': image_bytes}}
-    params = {}
-    response = client.predict(name, payload, params)
-    return response  # waits till request is returned
+    response = requests.post(PREDICTION_URL, data=json.dumps(instances))
+    response_json = response.json()
+    result = response_json['predictions'][0]
+
+    predictions = []
+    for i in range(int(result['num_detections'])):
+        if result['detection_scores'][i] > 0.5:
+            name = result['detection_classes_as_text'][i]
+            bounding_box = result['detection_boxes'][i]
+            predictions.append({
+                "name": name,
+                "bounding_box": bounding_box
+            })
+    return predictions
 
 
 def handle(request):
@@ -52,25 +65,25 @@ def handle(request):
     image = request_json.get('image')
     image_bytes = base64.b64decode(image.encode())
     storage.upload(image_bytes, execution_id)
-    prediction = get_prediction(image_bytes)
-    log_prediction(prediction)
+    predictions = get_predictions(image, execution_id)
+    log_predictions(predictions)
 
-    coloured = identify_colours(image_bytes, prediction.payload)
+    coloured = identify_colours(image_bytes, predictions)
     found_set = find_set(coloured)
-    response = json.dumps([format_annotation(card) for card in found_set])
+    response = json.dumps(found_set)
     return response, 200, headers
 
 
 def identify_colours(image_bytes, cards):
     for card in cards:
-        colour = identify(image_bytes, card.image_object_detection.bounding_box.normalized_vertices)
-        card.display_name = card.display_name[0] + colour + card.display_name[1:]
+        colour = identify(image_bytes, card['bounding_box'])
+        card['name'] = card['name'][0] + colour + card['name'][1:]
     return cards
 
 
 def find_set(cards):
     for potential_set in combinations(cards, 3):
-        if is_set(*[c.display_name for c in potential_set]):
+        if is_set(*[c['name'] for c in potential_set]):
             return potential_set
     return []
 
@@ -84,23 +97,7 @@ def is_set(a, b, c):
     return True
 
 
-def format_annotation(annotation):
-    bounding_box = annotation.image_object_detection.bounding_box.normalized_vertices
-    return {
-        "name": annotation.display_name,
-        "bounding_box": [format_point(p) for p in bounding_box]
-    }
-
-
-def format_point(point):
-    return {
-        "x": point.x,
-        "y": point.y
-    }
-
-
-def log_prediction(prediction):
+def log_predictions(predictions):
     print("Found bounding boxes:")
-    for annotation in prediction.payload:
-        bbox = annotation.image_object_detection.bounding_box.normalized_vertices
-        print(f'{bbox[0].x},{bbox[0].y},{bbox[1].x},{bbox[1].y},{annotation.display_name}')
+    for prediction in predictions:
+        print(prediction)
