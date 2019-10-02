@@ -7,9 +7,9 @@ from os.path import isfile, join
 class ColourDetector(unittest.TestCase):
 
     def test_transform_point(self):
-        self.assertEqual(transform_point(Point(0, 0), 10, 10), (0, 0))
-        self.assertEqual(transform_point(Point(1, 1), 10, 10), (10, 10))
-        self.assertEqual(transform_point(Point(0.5, 0.1), 10, 10), (5, 1))
+        self.assertEqual(transform_point(point(0, 0), 10, 10), (0, 0))
+        self.assertEqual(transform_point(point(1, 1), 10, 10), (10, 10))
+        self.assertEqual(transform_point(point(0.5, 0.1), 10, 10), (5, 1))
 
     def test_identify(self):
         for file_name in listdir('test/images'):
@@ -19,7 +19,8 @@ class ColourDetector(unittest.TestCase):
                 with self.subTest(msg="Checking if image is colour", image=file, colour=expected_colour):
                     with open(file, 'rb') as image_file:
                         image_data = image_file.read()
-                        self.assertEqual(identify(image_data, [Point(0, 0), Point(1, 1)]), expected_colour)
+                        bounding_box = create_bounding_box((0, 0, 1, 1))
+                        self.assertEqual(identify(image_data, bounding_box), expected_colour)
 
     def test_identify_all_red(self):
         coords_list = [
@@ -92,16 +93,14 @@ class ColourDetector(unittest.TestCase):
 
 
 def create_bounding_box(coords):
-    return Point(*coords[0:2]), Point(*coords[2:4])
+    return {
+        'top_left': point(coords[1], coords[0]),
+        'bottom_right': point(coords[3], coords[2]),
+    }
 
 
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def __repr__(self):
-        return f'Point(x: {self.x}, y: {self.y}'
+def point(x, y):
+    return {'x': x, 'y': y}
 
 
 if __name__ == '__main__':

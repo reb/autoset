@@ -19,8 +19,8 @@ def hue_to_colour(hue):
     return 'B'
 
 
-def transform_point(x, y, width, height):
-    return int(x * width), int(y * height)
+def transform_point(point, width, height):
+    return int(point['x'] * width), int(point['y'] * height)
 
 
 def identify(image_data, bounding_box):
@@ -28,8 +28,8 @@ def identify(image_data, bounding_box):
     image_data_array = np.asarray(bytearray(image_data), dtype=np.uint8)
     image = cv2.imdecode(image_data_array, cv2.IMREAD_COLOR)
     height, width, _ = image.shape
-    top_left = transform_point(bounding_box[0], bounding_box[1], width, height)
-    bottom_right = transform_point(bounding_box[2], bounding_box[3], width, height)
+    top_left = transform_point(bounding_box['top_left'], width, height)
+    bottom_right = transform_point(bounding_box['bottom_right'], width, height)
     card = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
     card_hsv = cv2.cvtColor(card, cv2.COLOR_BGR2HSV)
     mask = non_white_pixels(card)

@@ -2,7 +2,6 @@ import base64
 import json
 import os
 from itertools import combinations
-
 import requests
 import storage
 from colour_detector import identify
@@ -29,7 +28,16 @@ def get_predictions(image_bytes, image_key):
             bounding_box = result['detection_boxes'][i]
             predictions.append({
                 "name": name,
-                "bounding_box": bounding_box
+                "bounding_box": {
+                    "top_left": {
+                        "y": bounding_box[0],
+                        "x": bounding_box[1]
+                    },
+                    "bottom_right": {
+                        "y": bounding_box[2],
+                        "x": bounding_box[3]
+                    }
+                }
             })
     return predictions
 

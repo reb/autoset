@@ -114,8 +114,8 @@
 
         result.forEach(card => {
           ctx.beginPath();
-          const topLeft = card.bounding_box[0];
-          const bottomRight = card.bounding_box[1];
+          const topLeft = card.bounding_box['top_left'];
+          const bottomRight = card.bounding_box['bottom_right];
           const x = topLeft.x * canvas.width;
           const y = topLeft.y * canvas.height;
           const width = (bottomRight.x - topLeft.x) * canvas.width;
