@@ -1,5 +1,5 @@
 import unittest
-from function.main import is_set
+from main import is_set, find_set
 
 
 class IsSet(unittest.TestCase):

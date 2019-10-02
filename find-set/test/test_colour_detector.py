@@ -1,5 +1,5 @@
 import unittest
-from function.colour_detector import transform_point, identify
+from colour_detector import transform_point, identify
 from os import listdir
 from os.path import isfile, join
 
@@ -12,8 +12,8 @@ class ColourDetector(unittest.TestCase):
         self.assertEqual(transform_point(point(0.5, 0.1), 10, 10), (5, 1))
 
     def test_identify(self):
-        for file_name in listdir('test/images'):
-            file = join('test/images', file_name)
+        for file_name in listdir('images'):
+            file = join('images', file_name)
             if isfile(file):
                 expected_colour = file_name[1]
                 with self.subTest(msg="Checking if image is colour", image=file, colour=expected_colour):
@@ -40,7 +40,7 @@ class ColourDetector(unittest.TestCase):
             (0.6445749998092651, 0.1073089987039566, 0.7161980271339417, 0.33254799246788025),
             (0.5279780030250549, 0.6460949778556824, 0.6029549837112427, 0.9000980257987976),
         ]
-        self.full_image_test('test/images/full/all_red.jpg', coords_list, "R")
+        self.full_image_test('images/full/all_red.jpg', coords_list, "R")
 
     def test_identify_all_green(self):
         coords_list = [
@@ -61,7 +61,7 @@ class ColourDetector(unittest.TestCase):
             (0.4809879958629608, 0.6829040050506592, 0.5630729794502258, 0.9538040161132812),
             (0.5743759870529175, 0.32729798555374146, 0.6523659825325012, 0.5936579704284668)
         ]
-        self.full_image_test('test/images/full/all_green.jpg', coords_list, "G")
+        self.full_image_test('images/full/all_green.jpg', coords_list, "G")
 
     def test_identify_all_blue(self):
         coords_list = [
@@ -81,7 +81,7 @@ class ColourDetector(unittest.TestCase):
             (0.4047119915485382, 0.06543900072574615, 0.4666230082511902, 0.2743239998817444),
             (0.3247610032558441, 0.2966260015964508, 0.3904139995574951, 0.5115169882774353)
         ]
-        self.full_image_test('test/images/full/all_blue.jpg', coords_list, "B")
+        self.full_image_test('images/full/all_blue.jpg', coords_list, "B")
 
     def full_image_test(self, image_name, coords_list, expected):
         bounding_boxes = [create_bounding_box(coords) for coords in coords_list]
