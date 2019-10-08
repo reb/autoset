@@ -94,6 +94,7 @@ def identify_colours_with_kmeans(image_bytes, cards):
     colours = colour_detector.identify_all_with_kmeans(image_bytes, bounding_boxes)
     for card, colour in zip(cards, colours):
         card['name'] = card['name'][0] + colour + card['name'][1:]
+    return cards
 
 
 def find_set(cards):
