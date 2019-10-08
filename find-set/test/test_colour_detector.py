@@ -1,5 +1,5 @@
 import unittest
-from colour_detector import transform_point, identify
+from colour_detector import transform_point, identify, identify_all_with_kmeans
 from os import listdir
 from os.path import isfile, join
 
@@ -41,6 +41,26 @@ class ColourDetector(unittest.TestCase):
             (0.5279780030250549, 0.6460949778556824, 0.6029549837112427, 0.9000980257987976),
         ]
         self.full_image_test('images/full/all_red.jpg', coords_list, "R")
+
+    def test_identify_all_with_kmeans_red(self):
+        coords_list = [
+            (0.5308570265769958, 0.36052098870277405, 0.6039609909057617, 0.6050900220870972),
+            (0.23275800049304962, 0.3991140127182007, 0.3132689893245697, 0.6381869912147522),
+            (0.3505550026893616, 0.09201960265636444, 0.42208099365234375, 0.3177050054073334),
+            (0.32738301157951355, 0.6436910033226013, 0.4071210026741028, 0.909296989440918),
+            (0.6242330074310303, 0.374891996383667, 0.6908389925956726, 0.6057959794998169),
+            (0.4380260109901428, 0.0916299968957901, 0.5144810080528259, 0.32589098811149597),
+            (0.43539300560951233, 0.3546600043773651, 0.5067330002784729, 0.6053599715232849),
+            (0.6260700225830078, 0.655273973941803, 0.698714017868042, 0.9106829762458801),
+            (0.25877299904823303, 0.11431799829006195, 0.32862600684165955, 0.3121950030326843),
+            (0.5421950221061707, 0.08898740261793137, 0.6152060031890869, 0.31870898604393005),
+            (0.22143299877643585, 0.6914160251617432, 0.302278995513916, 0.9437620043754578),
+            (0.33400699496269226, 0.3575359880924225, 0.41206100583076477, 0.609607994556427),
+            (0.4285149872303009, 0.6344599723815918, 0.5079339742660522, 0.9025819897651672),
+            (0.6445749998092651, 0.1073089987039566, 0.7161980271339417, 0.33254799246788025),
+            (0.5279780030250549, 0.6460949778556824, 0.6029549837112427, 0.9000980257987976),
+        ]
+        self.kmeans_test('images/full/all_red.jpg', coords_list, ['#'] * 15)
 
     def test_identify_all_green(self):
         coords_list = [
@@ -90,6 +110,12 @@ class ColourDetector(unittest.TestCase):
             for bounding_box in bounding_boxes:
                 with self.subTest(bounding_box=bounding_box):
                     self.assertEqual(identify(image_data, bounding_box), expected)
+
+    def kmeans_test(self, image_name, coords_list, expected):
+        bounding_boxes = [create_bounding_box(coords) for coords in coords_list]
+        with open(image_name,  'rb') as image_file:
+            image_data = image_file.read()
+            self.assertEqual(identify_all_with_kmeans(image_data, bounding_boxes), expected)
 
 
 def create_bounding_box(coords):

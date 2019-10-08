@@ -4,7 +4,7 @@ import os
 from itertools import combinations
 import requests
 import storage
-from colour_detector import identify
+import colour_detector
 
 PREDICTION_URL = os.environ.get('PREDICTION_URL')
 
@@ -76,7 +76,7 @@ def handle(request):
     predictions = get_predictions(image, execution_id)
     log_predictions(predictions)
 
-    coloured = identify_colours(image_bytes, predictions)
+    coloured = identify_colours_with_kmeans(image_bytes, predictions)
     found_set = find_set(coloured)
     response = json.dumps(found_set)
     return response, 200, headers
@@ -84,9 +84,16 @@ def handle(request):
 
 def identify_colours(image_bytes, cards):
     for card in cards:
-        colour = identify(image_bytes, card['bounding_box'])
+        colour = colour_detector.identify(image_bytes, card['bounding_box'])
         card['name'] = card['name'][0] + colour + card['name'][1:]
     return cards
+
+
+def identify_colours_with_kmeans(image_bytes, cards):
+    bounding_boxes = [card['bounding_box'] for card in cards]
+    colours = colour_detector.identify_all_with_kmeans(image_bytes, bounding_boxes)
+    for card, colour in zip(cards, colours):
+        card['name'] = card['name'][0] + colour + card['name'][1:]
 
 
 def find_set(cards):
