@@ -20,17 +20,19 @@ def hue_to_colour(hue):
 
 
 def transform_point(point, width, height):
-    return int(point['x'] * width), int(point['y'] * height)
+    return {
+        'x': int(point['x'] * width),
+        'y': int(point['y'] * height),
+    }
 
 
 def identify(image_data, bounding_box):
-    # image = cv2.imread(image_data)
     image_data_array = np.asarray(bytearray(image_data), dtype=np.uint8)
     image = cv2.imdecode(image_data_array, cv2.IMREAD_COLOR)
     height, width, _ = image.shape
     top_left = transform_point(bounding_box['top_left'], width, height)
     bottom_right = transform_point(bounding_box['bottom_right'], width, height)
-    card = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+    card = image[top_left['y']:bottom_right['y'], top_left['x']:bottom_right['x']]
     card_hsv = cv2.cvtColor(card, cv2.COLOR_BGR2HSV)
     mask = non_white_pixels(card)
     score = {'R': 0, 'G': 0, 'B': 0}

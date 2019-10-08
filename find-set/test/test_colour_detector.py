@@ -7,9 +7,9 @@ from os.path import isfile, join
 class ColourDetector(unittest.TestCase):
 
     def test_transform_point(self):
-        self.assertEqual(transform_point(point(0, 0), 10, 10), (0, 0))
-        self.assertEqual(transform_point(point(1, 1), 10, 10), (10, 10))
-        self.assertEqual(transform_point(point(0.5, 0.1), 10, 10), (5, 1))
+        self.assertEqual(transform_point(point(0, 0), 10, 10), {'x': 0, 'y': 0})
+        self.assertEqual(transform_point(point(1, 1), 10, 10), {'x': 10, 'y': 10})
+        self.assertEqual(transform_point(point(0.5, 0.1), 10, 10), {'x': 5, 'y': 1})
 
     def test_identify(self):
         for file_name in listdir('images'):
