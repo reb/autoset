@@ -1,7 +1,7 @@
 <annotation>
 	<folder>only-red</folder>
 	<filename>20190615_174940_HDR.jpg</filename>
-	<path>C:\Users\reb\Downloads\autoset-images\only-red\20190615_174940_HDR.jpg</path>
+	<path>C:\dev\python\autoset\dataset\only-red\20190615_174940_HDR.jpg</path>
 	<source>
 		<database>Unknown</database>
 	</source>
@@ -156,7 +156,7 @@
 		</bndbox>
 	</object>
 	<object>
-		<name>2ED</name>
+		<name>1ED</name>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
